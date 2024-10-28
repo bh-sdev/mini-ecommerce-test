@@ -1,0 +1,60 @@
+# version: '3.8'
+
+services:
+  product-service:
+    build:
+      context: ./product-service
+    ports:
+      - "50051:50051"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/super_dev_ecommerce_product_service
+    depends_on:
+      db:
+        condition: service_healthy
+
+  order-service:
+    build:
+      context: ./order-service
+    ports:
+      - "50052:50052"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/super_dev_ecommerce_order_service
+      - PRODUCT_SERVICE_ADDRESS=product-service:50051
+    depends_on:
+      db:
+        condition: service_healthy
+      product-service:
+        condition: service_started
+
+  api-gateway:
+    build:
+      context: ./gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - PRODUCT_SERVICE_ADDRESS=product-service:50051
+      - ORDER_SERVICE_ADDRESS=order-service:50052
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/super_dev_ecommerce_api_service
+    depends_on:
+      - product-service
+      - order-service
+
+  db:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    # ports:
+      # - "5433:5432"  # Expose Postgres on host port 5433
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d  # Mount the initialization scripts
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

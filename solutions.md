@@ -1,0 +1,1 @@
+npx pbjs  --ts src/generated/product.ts proto/product.proto

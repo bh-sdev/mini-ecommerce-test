@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/superdev/ecommerce/gateway/proto";
+
+import "common.proto"; // Import the common proto file to reference Empty message
+
+message OrderItem {
+    int32 product_id = 1;
+    int32 quantity = 2;
+    int32 price = 3;
+    optional string name = 4;
+    optional string description = 5;
+}
+
+message Order {
+    int32 id = 1;
+    repeated OrderItem items = 2;
+    float total_price = 3;
+    optional int32 customerId = 4;
+    optional string customerName = 5;
+}
+
+message OrderRequest {
+    int32 id = 1;
+}
+
+message DeleteOrderRequest {
+    int32 id = 1;
+} 
+
+message CreateOrderRequest {
+    repeated OrderItem items = 1;
+    optional int32 customerId = 4;
+    optional string customerName = 5;
+}
+
+message OrderResponse {
+    Order order = 1;
+}
+
+message OrderListResponse {
+    repeated Order orders = 1;
+}
+
+
+service OrderService {
+    rpc CreateOrder(CreateOrderRequest) returns (OrderResponse);
+    rpc GetOrder(OrderRequest) returns (Order);
+    rpc DeleteOrder(DeleteOrderRequest) returns (Order);
+    rpc ListOrders(Empty) returns (OrderListResponse);
+}
